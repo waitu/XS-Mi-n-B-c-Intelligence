@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xsmb-backend"
+version = "0.1.0"
+description = "XS miền Bắc data ingestion and analytics backend"
+readme = "../README.md"
+authors = [{ name = "XS Team" }]
+license = { text = "MIT" }
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.111.0,<1",
+    "uvicorn[standard]>=0.30.0,<1",
+    "sqlmodel>=0.0.16,<1",
+    "sqlalchemy>=2.0.25,<3",
+    "httpx>=0.27.2,<1",
+    "beautifulsoup4>=4.12.3,<5",
+    "pandas>=2.3.0,<3",
+    "numpy>=2.1.0,<3",
+    "python-dateutil>=2.9.0.post0,<3",
+    "pydantic>=2.7.0,<3",
+    "pydantic-settings>=2.6.0,<3",
+    "tenacity>=8.3.0,<9",
+    "python-dotenv>=1.0.1,<2",
+    "openpyxl>=3.1.0,<4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0,<9",
+    "pytest-asyncio>=0.23.7,<1",
+    "requests>=2.32.0,<3"
+]

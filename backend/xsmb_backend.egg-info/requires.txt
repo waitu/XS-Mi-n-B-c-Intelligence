@@ -1,0 +1,17 @@
+fastapi<1,>=0.111.0
+uvicorn[standard]<1,>=0.30.0
+sqlmodel<1,>=0.0.14
+httpx<1,>=0.27.2
+beautifulsoup4<5,>=4.12.3
+pandas<3,>=2.3.0
+numpy<3,>=2.1.0
+python-dateutil<3,>=2.9.0.post0
+pydantic<3,>=2.7.0
+pydantic-settings<3,>=2.6.0
+tenacity<9,>=8.3.0
+python-dotenv<2,>=1.0.1
+
+[dev]
+pytest<9,>=8.2.0
+pytest-asyncio<1,>=0.23.7
+requests<3,>=2.32.0
