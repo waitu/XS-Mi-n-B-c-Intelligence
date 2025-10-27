@@ -138,3 +138,99 @@ export interface BacktestResponse {
   timeline: BacktestDrawResult[];
   parameters: Record<string, unknown>;
 }
+
+export interface RegionListResponse {
+  regions: string[];
+}
+
+export interface LottoStrategyConfig {
+  type: string;
+  options: Record<string, unknown>;
+  plugin_id?: string | null;
+  risk_level?: string;
+}
+
+export interface LottoRiskLimits {
+  max_daily_stake_ratio: number;
+  max_single_stake_ratio: number;
+}
+
+export interface LottoPayoutRules {
+  jackpot_multiplier: number;
+  loss_multiplier: number;
+}
+
+export interface LottoBacktestSummary {
+  final_balance: number;
+  total_bets: number;
+  total_wins: number;
+  total_losses: number;
+  win_rate: number;
+  max_drawdown: number;
+  best_month?: string | null;
+  best_month_pnl?: number | null;
+  sharpe_like?: number | null;
+  accuracy: number;
+  stop_reason: string;
+}
+
+export interface LottoTimelineBet {
+  number: string;
+  stake: number;
+  hit: boolean;
+  payout: number;
+  rank?: number | null;
+  probability?: number | null;
+}
+
+export interface LottoTimelinePrediction {
+  rank: number;
+  number: string;
+  probability: number | null;
+}
+
+export interface LottoTimelineEntry {
+  date: string;
+  capital_start: number;
+  capital_end: number;
+  stake_total: number;
+  pnl: number;
+  bets: LottoTimelineBet[];
+  predictions: LottoTimelinePrediction[];
+  hits: string[];
+  drawdown: number;
+  daily_return: number;
+  capital_halted: boolean;
+}
+
+export interface LottoChartPoint {
+  date: string;
+  value: number;
+}
+
+export interface LottoBacktestCharts {
+  capital_curve: LottoChartPoint[];
+  accuracy_curve: LottoChartPoint[];
+  profit_curve: LottoChartPoint[];
+}
+
+export interface LottoBacktestResponse {
+  config: {
+    capital: number;
+    date_start: string;
+    date_end: string;
+    region?: string | null;
+    model: string;
+    top_k: number;
+    digits: number;
+    strategy: LottoStrategyConfig;
+    payout_rules: LottoPayoutRules;
+    risk_limits: LottoRiskLimits;
+    lookback_draws?: number | null;
+    seed?: number | null;
+  };
+  summary: LottoBacktestSummary;
+  timeline: LottoTimelineEntry[];
+  charts: LottoBacktestCharts;
+  logs: Record<string, unknown>;
+}

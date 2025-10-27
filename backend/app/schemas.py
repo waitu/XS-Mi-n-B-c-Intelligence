@@ -133,6 +133,97 @@ class BacktestResponse(BaseModel):
     parameters: Mapping[str, object | None]
 
 
+class LottoStrategyConfig(BaseModel):
+    type: str
+    options: dict[str, object] = {}
+    plugin_id: str | None = None
+
+
+class LottoRiskLimits(BaseModel):
+    max_daily_stake_ratio: float = 0.20
+    max_single_stake_ratio: float = 0.10
+
+
+class LottoPayoutRules(BaseModel):
+    jackpot_multiplier: float = 70.0
+    loss_multiplier: float = -1.0
+
+
+class LottoBacktestRequest(BaseModel):
+    capital: float
+    date_start: dt.date
+    date_end: dt.date
+    region: str | None = None
+    model: str
+    top_k: int = 5
+    digits: int = 2
+    strategy: LottoStrategyConfig
+    risk_limits: LottoRiskLimits | None = None
+    payout_rules: LottoPayoutRules | None = None
+    lookback_draws: int | None = None
+    seed: int | None = None
+
+
+class TimelineBetSchema(BaseModel):
+    number: str
+    stake: float
+    hit: bool
+    payout: float
+    rank: int | None = None
+    probability: float | None = None
+
+
+class TimelineEntrySchema(BaseModel):
+    date: dt.date
+    capital_start: float
+    capital_end: float
+    stake_total: float
+    pnl: float
+    bets: list[TimelineBetSchema]
+    predictions: list[BacktestPredictionItem]
+    hits: list[str]
+    drawdown: float
+    daily_return: float
+    capital_halted: bool
+
+
+class ChartPointSchema(BaseModel):
+    date: dt.date
+    value: float
+
+
+class BacktestChartsSchema(BaseModel):
+    capital_curve: list[ChartPointSchema]
+    accuracy_curve: list[ChartPointSchema]
+    profit_curve: list[ChartPointSchema]
+
+
+class LottoBacktestSummarySchema(BaseModel):
+    final_balance: float
+    total_bets: int
+    total_wins: int
+    total_losses: int
+    win_rate: float
+    max_drawdown: float
+    best_month: str | None = None
+    best_month_pnl: float | None = None
+    sharpe_like: float | None = None
+    accuracy: float
+    stop_reason: str
+
+
+class LottoBacktestResponse(BaseModel):
+    config: Mapping[str, object]
+    summary: LottoBacktestSummarySchema
+    timeline: list[TimelineEntrySchema]
+    charts: BacktestChartsSchema
+    logs: Mapping[str, object]
+
+
+class RegionListResponse(BaseModel):
+    regions: list[str]
+
+
 class PredictionRequest(BaseModel):
     algorithm: str
     top_k: int = 5

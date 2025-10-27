@@ -7,6 +7,10 @@ import type {
   TailFrequency,
   TailFrequencyGroup,
   BacktestResponse,
+  RegionListResponse,
+  LottoBacktestResponse,
+  LottoRiskLimits,
+  LottoPayoutRules,
 } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000';
@@ -231,5 +235,45 @@ export function getBacktestHeads(options: BacktestOptions = {}): Promise<Backtes
       evaluation_draws,
       end_date,
     },
+  });
+}
+
+export function getAvailableRegions(): Promise<RegionListResponse> {
+  return request<RegionListResponse>('/metadata/regions');
+}
+
+export interface LottoBacktestRequestBody {
+  capital: number;
+  date_start: string;
+  date_end: string;
+  region?: string | null;
+  model: string;
+  top_k: number;
+  digits: number;
+  strategy: {
+    type: string;
+    options?: Record<string, unknown>;
+    plugin_id?: string | null;
+  };
+  risk_limits?: Partial<LottoRiskLimits>;
+  payout_rules?: Partial<LottoPayoutRules>;
+  lookback_draws?: number | null;
+  seed?: number | null;
+}
+
+export function runLottoBacktest(body: LottoBacktestRequestBody): Promise<LottoBacktestResponse> {
+  const payload = {
+    ...body,
+    strategy: {
+      type: body.strategy.type,
+      options: body.strategy.options ?? {},
+      plugin_id: body.strategy.plugin_id ?? null,
+    },
+    risk_limits: body.risk_limits ?? undefined,
+    payout_rules: body.payout_rules ?? undefined,
+  };
+  return request<LottoBacktestResponse>('/backtest/lotto/run', {
+    method: 'POST',
+    body: JSON.stringify(payload),
   });
 }

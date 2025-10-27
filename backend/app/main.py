@@ -11,11 +11,15 @@ import pandas as pd
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import analytics, crud, ingestion
+from .backtest import BacktestConfig, PayoutRules, RiskLimits, StrategyConfig, run_backtest
 from .config import get_settings
-from .database import init_db
+from .database import get_session, init_db
 from .models import Draw
 from .schemas import (
     BacktestResponse,
+    LottoBacktestRequest,
+    LottoBacktestResponse,
+    RegionListResponse,
     DrawSchema,
     IngestDayRequest,
     IngestMonthRequest,
@@ -181,6 +185,14 @@ def stats_summary() -> SummaryStats:
     return SummaryStats(**summary)
 
 
+@app.get("/metadata/regions", response_model=RegionListResponse)
+def list_regions() -> RegionListResponse:
+    with get_session() as session:
+        rows = session.exec(select(Draw.region).distinct().order_by(Draw.region.asc())).all()
+    regions = [value for value in rows if value]
+    return RegionListResponse(regions=regions or ["mien-bac"])
+
+
 @app.get("/stats/frequencies", response_model=list[NumberFrequency])
 def number_frequencies(limit: int = Query(100, ge=1, le=500)) -> list[NumberFrequency]:
     numbers = analytics.get_number_frequencies(limit=limit)
@@ -274,6 +286,52 @@ def backtest_heads_endpoint(
     except ValueError as exc:  # noqa: BLE001
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return BacktestResponse(**payload)
+
+
+@app.post("/backtest/lotto/run", response_model=LottoBacktestResponse)
+def run_lotto_backtest(request: LottoBacktestRequest = Body(...)) -> LottoBacktestResponse:
+    if request.capital <= 0:
+        raise HTTPException(status_code=400, detail="capital phải lớn hơn 0")
+    risk_limits = RiskLimits(
+        max_daily_stake_ratio=max(request.risk_limits.max_daily_stake_ratio, 0.0)
+        if request.risk_limits
+        else 0.20,
+        max_single_stake_ratio=max(request.risk_limits.max_single_stake_ratio, 0.0)
+        if request.risk_limits
+        else 0.10,
+    )
+    payout_rules = PayoutRules(
+        jackpot_multiplier=request.payout_rules.jackpot_multiplier
+        if request.payout_rules
+        else 70.0,
+        loss_multiplier=request.payout_rules.loss_multiplier if request.payout_rules else -1.0,
+    )
+    strategy_config = StrategyConfig(
+        type=request.strategy.type,
+        options=request.strategy.options,
+        plugin_id=request.strategy.plugin_id,
+    )
+    config = BacktestConfig(
+        capital=request.capital,
+        date_start=request.date_start,
+        date_end=request.date_end,
+        region=request.region,
+        model=request.model,
+        top_k=request.top_k,
+        digits=request.digits,
+        strategy=strategy_config,
+        risk_limits=risk_limits,
+        payout_rules=payout_rules,
+        lookback_draws=request.lookback_draws,
+        seed=request.seed,
+    )
+    try:
+        result = run_backtest(config)
+    except ValueError as exc:  # noqa: BLE001
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:  # noqa: BLE001
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return LottoBacktestResponse(**result.to_dict())
 
 
 @app.post("/ingest/refresh", response_model=RefreshResponse)

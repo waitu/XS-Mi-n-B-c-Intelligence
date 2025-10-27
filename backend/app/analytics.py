@@ -390,8 +390,9 @@ def random_forest_predictions(
     digits: int = 2,
     top_k: int = 5,
     lookback_draws: int | None = None,
+    end_date: dt.date | None = None,
 ) -> tuple[list[tuple[str, float]], dict[str, object]]:
-    sequence = _special_prize_sequence(digits=digits, lookback_draws=lookback_draws)
+    sequence = _special_prize_sequence(digits=digits, lookback_draws=lookback_draws, end_date=end_date)
     if len(sequence) < 5:
         return ([], {"reason": "insufficient_history"})
 
@@ -463,8 +464,9 @@ def lstm_predictions(
     digits: int = 2,
     top_k: int = 5,
     lookback_draws: int | None = None,
+    end_date: dt.date | None = None,
 ) -> tuple[list[tuple[str, float]], dict[str, object]]:
-    sequence = _special_prize_sequence(digits=digits, lookback_draws=lookback_draws)
+    sequence = _special_prize_sequence(digits=digits, lookback_draws=lookback_draws, end_date=end_date)
     if len(sequence) < 8:
         return ([], {"reason": "insufficient_history"})
 
@@ -503,6 +505,7 @@ def genetic_predictions(
     population: int = 120,
     generations: int = 35,
     seed: int | None = None,
+    end_date: dt.date | None = None,
 ) -> tuple[list[tuple[str, float]], dict[str, object]]:
     if seed is not None:
         random.seed(seed)
@@ -510,6 +513,7 @@ def genetic_predictions(
         digits=digits,
         prize_names=["Đặc biệt"],
         lookback_draws=lookback_draws,
+        end_date=end_date,
     )
     if not distribution:
         return ([], {"reason": "insufficient_history"})
@@ -566,6 +570,7 @@ def naive_bayes_predictions(
     digits: int = 2,
     top_k: int = 5,
     lookback_draws: int | None = None,
+    end_date: dt.date | None = None,
 ) -> tuple[list[tuple[str, float]], dict[str, object]]:
     if digits < 2:
         digits = 2
@@ -573,6 +578,7 @@ def naive_bayes_predictions(
         digits=digits,
         prize_names=["Đặc biệt"],
         lookback_draws=lookback_draws,
+        end_date=end_date,
     )
     if not distribution:
         return ([], {"reason": "insufficient_history"})
@@ -581,11 +587,13 @@ def naive_bayes_predictions(
         digits=1,
         prize_names=["Đặc biệt"],
         lookback_draws=lookback_draws,
+        end_date=end_date,
     )
     tails = get_suffix_frequencies(
         digits=1,
         prize_names=["Đặc biệt"],
         lookback_draws=lookback_draws,
+        end_date=end_date,
     )
     head_map = dict(heads) or {str(i): 1 for i in range(10)}
     tail_map = dict(tails) or {str(i): 1 for i in range(10)}
@@ -610,16 +618,18 @@ def prophet_predictions(
     digits: int = 2,
     top_k: int = 5,
     lookback_draws: int | None = None,
+    end_date: dt.date | None = None,
 ) -> tuple[list[tuple[str, float]], dict[str, object]]:
     distribution = get_suffix_frequencies(
         digits=digits,
         prize_names=["Đặc biệt"],
         lookback_draws=lookback_draws,
+        end_date=end_date,
     )
     if not distribution:
         return ([], {"reason": "insufficient_history"})
 
-    sequence = _special_prize_sequence(digits=digits, lookback_draws=lookback_draws)
+    sequence = _special_prize_sequence(digits=digits, lookback_draws=lookback_draws, end_date=end_date)
     if not sequence:
         return ([], {"reason": "insufficient_history"})
 
@@ -630,7 +640,7 @@ def prophet_predictions(
 
     # seasonal component: day of week weighting using draw dates
     rows = _slice_lookback(
-        _load_prize_numbers(prize_names=["Đặc biệt"], order="asc"),
+        _load_prize_numbers(prize_names=["Đặc biệt"], order="asc", end_date=end_date),
         lookback_draws,
     )
     seasonality: dict[str, float] = {}
@@ -673,6 +683,7 @@ def predict_numbers(
     iterations: int | None = None,
     advanced: bool = False,
     seed: int | None = None,
+    as_of_date: dt.date | None = None,
 ) -> dict[str, object]:
     if top_k <= 0:
         raise ValueError("top_k phải lớn hơn 0")
@@ -690,6 +701,7 @@ def predict_numbers(
         prize_names=target_prizes,
         lookback_draws=lookback_draws,
         limit=None,
+        end_date=as_of_date,
     )
     if not base_distribution:
         raise ValueError("Không có đủ dữ liệu để dự đoán")
@@ -712,7 +724,7 @@ def predict_numbers(
     elif algorithm_key == "trend":
         window = lookback_draws or 45
         limited = _slice_lookback(
-            _load_prize_numbers(prize_names=target_prizes, order="asc"),
+            _load_prize_numbers(prize_names=target_prizes, order="asc", end_date=as_of_date),
             window,
         )
         counter: Counter[str] = Counter()
@@ -770,6 +782,7 @@ def predict_numbers(
             digits=digits,
             top_k=top_k,
             lookback_draws=lookback_draws,
+            end_date=as_of_date,
         )
         notes = "Mô phỏng Rừng ngẫu nhiên dựa trên đặc trưng tần suất, chuyển tiếp"
 
@@ -778,6 +791,7 @@ def predict_numbers(
             digits=digits,
             top_k=top_k,
             lookback_draws=lookback_draws,
+            end_date=as_of_date,
         )
         notes = "Bi-LSTM suy luận bằng trọng số suy giảm theo thời gian"
 
@@ -787,6 +801,7 @@ def predict_numbers(
             top_k=top_k,
             lookback_draws=lookback_draws,
             seed=seed,
+            end_date=as_of_date,
         )
         notes = "Giải thuật di truyền chọn lọc tổ hợp nóng/lạnh"
 
@@ -795,6 +810,7 @@ def predict_numbers(
             digits=digits,
             top_k=top_k,
             lookback_draws=lookback_draws,
+            end_date=as_of_date,
         )
         notes = "Naive Bayes kết hợp xác suất đầu/cuối"
 
@@ -803,6 +819,7 @@ def predict_numbers(
             digits=digits,
             top_k=top_k,
             lookback_draws=lookback_draws,
+            end_date=as_of_date,
         )
         notes = "Prophet dự báo xu hướng và mùa vụ"
 

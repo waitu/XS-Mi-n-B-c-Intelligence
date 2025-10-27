@@ -31,6 +31,9 @@ Các endpoint chính:
 - `GET /stats/summary` – Tổng quan dữ liệu.
 - `GET /stats/tail-frequencies` – Tần suất đuôi.
 - `GET /predictions/heads` – Gợi ý đầu số.
+- `POST /analytics/backtest/heads` – Backtest dựa trên bảng đề xuất đầu số.
+- `GET /metadata/regions` – Danh sách đài/miền xổ số có dữ liệu.
+- `POST /backtest/lotto/run` – Mô phỏng chiến lược cược theo cấu hình Backtest Pro.
 - `POST /ingest/refresh` – Đồng bộ dữ liệu theo khoảng ngày.
 - `POST /ingest/day` – Đồng bộ chính xác một ngày.
 - `POST /ingest/month` – Đồng bộ toàn bộ kỳ quay trong tháng.
@@ -51,6 +54,13 @@ VITE_API_BASE_URL=http://localhost:8000
 VITE_DEV_SERVER_HOST=127.0.0.1
 VITE_DEV_SERVER_PORT=5173
 ```
+
+### Backtest Pro dashboard
+
+- Giao diện điều hướng mới nằm ở thanh trên cùng, truy cập trang backtest tại đường dẫn `/backtest-pro`.
+- Tại đây có thể chọn mô hình dự đoán, chiến lược cược (cố định, Kelly, Martingale, plugin TypeScript…) và giới hạn rủi ro.
+- Sau khi nhấn **Run Backtest**, hệ thống sẽ gọi API `/backtest/lotto/run`, trả về đồ thị vốn, tỷ lệ chính xác, nhật ký giao dịch và các nút xuất JSON/CSV/PDF.
+- Ô **Plugin ID** dùng cho file chiến lược TypeScript tùy chỉnh đã đăng ký bên backend (thông qua cơ chế plugin loader).
 
 ## Kiểm thử
 

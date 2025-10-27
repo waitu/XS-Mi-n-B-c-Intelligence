@@ -25,6 +25,7 @@ dependencies = [
     "tenacity>=8.3.0,<9",
     "python-dotenv>=1.0.1,<2",
     "openpyxl>=3.1.0,<4",
+    "py-mini-racer>=0.6.0",
 ]
 
 [project.optional-dependencies]
